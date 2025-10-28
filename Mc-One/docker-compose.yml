@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_PASSWORD=mcpassword
+      - POSTGRES_USER=mcuser
+      - POSTGRES_DB=mcdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8080
+      - JWT_SECRET=${JWT_SECRET:-change-me}
+      - PRICE_SYMBOLS=${PRICE_SYMBOLS:-BTC-USD,ETH-USD,SOL-USD}
+      - PRICE_PROVIDER=${PRICE_PROVIDER:-random}
+      - DATABASE_URL=postgres://mcuser:mcpassword@postgres:5432/mcdb
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      - VITE_API_BASE=/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+volumes:
+  pgdata:
+
+
